@@ -1,5 +1,7 @@
 import numpy as np
+import sounddevice as sd
 from scipy.io.wavfile import write
+
 
 def gen_wave(f, fs, duration):
     n = duration * fs
@@ -7,7 +9,8 @@ def gen_wave(f, fs, duration):
     y = np.float32([f(time) for time in t])
     return y
 
-def rosenberg_glottal_pluse(t):
+
+def rosenberg_glottal_pulse(t):
     T1 = 0.004
     T2 = 0.002
     if t >= 0 and t <= T1:
@@ -17,17 +20,18 @@ def rosenberg_glottal_pluse(t):
     else:
         return 0
 
+
 fs = 44100
-pulse = gen_wave(rosenberg_glottal_pluse, fs, 0.008)
+pulse = gen_wave(rosenberg_glottal_pulse, fs, 0.008)
 
 Ug = np.fft.fft(pulse)
 V = []
-l = 14.5
+L = 14.5
 c = 35000
 N = len(Ug)
 for k in range(N):
     omega = 2*np.pi*k/N
-    V.append(Ug[k]/np.cos(omega*l/c))
+    V.append(Ug[k]/np.cos(omega*L/c))
 
 U = np.float32(abs(np.fft.ifft(V)))
 
@@ -38,3 +42,4 @@ for i in range(0, 100):
 
 
 write('test.wav', fs, wave)
+sd.play(wave, fs, blocking=True)
